@@ -15,8 +15,9 @@ def main():
 
     raw_data = loader.load_raw_data()
     clean_data = cleaner.clean_data(raw_data)
-    #print(cleaner.get_cleaning_report(raw_data, clean_data))
-
+    print("--"*70)
+    cleaner.get_cleaning_report(raw_data, clean_data)
+    print("--"*70)
     clean_data.to_csv('data/processed/clean_traffic_violations.csv', index=False)
     print("Datos limpios guardados en data/processed/clean_traffic_violations.csv")
 

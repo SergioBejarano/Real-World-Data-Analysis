@@ -18,7 +18,7 @@ class DataCleaner:
         df_clean['Comments'] = df_clean['Comments'].fillna('No comments')
         df_clean['Previous_Violations'] = df_clean['Previous_Violations'].fillna(0)
 
-        categorical_cols = ['Vehicle_Type', 'Driver_Gender', 'Weather_Condition']
+        categorical_cols = ['Vehicle_Type', 'Driver_Gender', 'Weather_Condition', 'Seatbelt_Worn', 'Helmet_Worn']
         for col in categorical_cols:
             if col in df_clean.columns:
                 df_clean[col] = df_clean[col].fillna('Unknown')
@@ -50,13 +50,27 @@ class DataCleaner:
         return df_clean
 
     def get_cleaning_report(self, original_df, cleaned_df):
-        """Generate a report of cleaning operations performed"""
+        """Genera y muestra un reporte formateado de las operaciones de limpieza realizadas"""
         report = {
-            'original_rows': len(original_df),
-            'cleaned_rows': len(cleaned_df),
-            'rows_removed': len(original_df) - len(cleaned_df),
-            'columns_processed': list(cleaned_df.columns),
-            'missing_values': cleaned_df.isnull().sum().to_dict(),
-            'data_types': cleaned_df.dtypes.to_dict()
+            'Total filas originales': len(original_df),
+            'Total filas después de limpieza': len(cleaned_df),
+            'Filas eliminadas': len(original_df) - len(cleaned_df),
+            'Valores nulos antes de limpieza': original_df.isnull().sum().to_dict(),
+            'Valores nulos después de limpieza': cleaned_df.isnull().sum().to_dict(),
         }
+
+        print("\n===== Reporte de Limpieza =====\n")
+        print(f"Total de filas originales: {report['Total filas originales']}")
+        print(f"Total de filas después de limpieza: {report['Total filas después de limpieza']}")
+        print(f"Filas eliminadas: {report['Filas eliminadas']}\n")
+
+        print("Valores nulos antes de limpieza:")
+        for col, count in report['Valores nulos antes de limpieza'].items():
+            print(f"   - {col}: {count}")
+
+        print("\nValores nulos después de limpieza:")
+        for col, count in report['Valores nulos después de limpieza'].items():
+            print(f"   - {col}: {count}")
+
+        print("\nLimpieza completada con éxito\n")
         return report
