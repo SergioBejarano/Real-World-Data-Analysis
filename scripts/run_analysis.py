@@ -1,71 +1,44 @@
-from traffic_analysis.data_loader import DataLoader
-from traffic_analysis.data_cleaner import DataCleaner
-from traffic_analysis.analyzer import TrafficAnalyzer
-from traffic_analysis.visualizer import TrafficVisualizer
-import os
-import json
+from data_loader import load_data
+from data_cleaner import clean_data
+from data_visualizer import (
+    plot_accidents_by_month,
+    plot_accidents_by_gravity,
+    plot_victims_by_municipality,
+    plot_accidents_by_class,
+    plot_weather_conditions,
+    plot_gravity_vs_class
+)
+from pathlib import Path
 
 def main():
-    os.makedirs('plots', exist_ok=True)
-    os.makedirs('data/processed', exist_ok=True)
+    # Ruta del archivo de datos
+    base_dir = Path(__file__).resolve().parent.parent  # Directorio raíz del proyecto
+    data_file = base_dir / 'data' / 'Accidentes_de_tr_nsito_reportados_en_los_municipios_que_tienen_convenio_con_la_Gerencia_de_Seguridad_Vial_de_Antioquia_20250421.csv'
 
-    print("Cargando y limpiando datos...")
-    loader = DataLoader()
-    cleaner = DataCleaner()
+    # Verificar si el archivo existe
+    if not data_file.exists():
+        print(f"Error: El archivo de datos no se encuentra en la ruta: {data_file}")
+        return
 
-    raw_data = loader.load_raw_data()
-    clean_data = cleaner.clean_data(raw_data)
-    print("--"*70)
-    cleaner.get_cleaning_report(raw_data, clean_data)
-    print("--"*70)
-    clean_data.to_csv('data/processed/clean_traffic_violations.csv', index=False)
-    print("Datos limpios guardados en data/processed/clean_traffic_violations.csv")
+    # Ruta de salida para las gráficas
+    output_dir = base_dir / 'plots'
 
-    print("Analizando datos...")
-    analyzer = TrafficAnalyzer(clean_data)
+    # Cargar los datos
+    data = load_data(data_file)
+    if data is None:
+        print("Error: No se pudieron cargar los datos.")
+        return
 
+    # Limpiar los datos
+    clean_data_df = clean_data(data)
 
-    print("Generando visualizaciones...")
+    # Generar gráficas
+    plot_gravity_vs_class(data, output_dir)
+    plot_accidents_by_month(clean_data_df, output_dir)
+    plot_accidents_by_gravity(clean_data_df, output_dir)
+    plot_victims_by_municipality(clean_data_df, output_dir)
+    plot_accidents_by_class(clean_data_df, output_dir)
+    plot_weather_conditions(clean_data_df, output_dir)
 
-    TrafficVisualizer.plot_violation_types(
-        analyzer.get_violation_types_distribution(),
-        'plots/violation_types.png'
-    )
-
-    TrafficVisualizer.plot_temporal_trends(
-        analyzer.get_temporal_trends(),
-        'plots/time_analysis.png'
-    )
-
-    TrafficVisualizer.plot_geographical_distribution(
-        analyzer.get_geographical_distribution(),
-        'plots/regional_distribution.png'
-    )
-
-    TrafficVisualizer.plot_time_of_day(
-        analyzer.get_time_of_day_analysis(),
-        'plots/time_of_day_distribution.png'
-    )
-
-    if 'Fine_Amount' in clean_data.columns:
-        TrafficVisualizer.plot_fine_distribution(
-            clean_data,
-            'plots/fine_amount_distribution.png'
-        )
-
-    if 'Driver_Age' in clean_data.columns:
-        TrafficVisualizer.plot_driver_age_distribution(
-            analyzer.get_driver_demographics(by='Age'),
-            'plots/driver_age_distribution.png'
-        )
-
-    if 'Driver_Gender' in clean_data.columns:
-        TrafficVisualizer.plot_driver_age_distribution(
-            analyzer.get_driver_demographics(by='Gender'),
-            'plots/driver_gender_distribution.png'
-        )
-
-    print("Proceso completado. Gráficas guardadas en la carpeta plots/")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
